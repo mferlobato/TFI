@@ -19,7 +19,7 @@ import seaborn as sns
 
 ## Carga de dataset
 
-df = pd.read_csv(r"C:\Users\malobato\Desktop\Fer\tfi\cs-training.csv")
+df = pd.read_csv("/Users/mariafernandalobato/Documents/Fernanda/ITBA/TFI/data/raw/cs-training.csv")
 df = df.drop(df.columns[0], axis=1)
 df['SeriousDlqin2yrs'] = df['SeriousDlqin2yrs'].astype(int)
 print(df.head()) 
@@ -134,3 +134,4 @@ for nombre, modelo in modelos.items():
 resultados_df = pd.DataFrame(resultados)
 print(resultados_df.round(4))
 resultados_df.to_csv(r"C:\Users\malobato\Desktop\Fer\tfi\metricas_modelos_python.csv", index=False)
+

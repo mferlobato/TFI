@@ -39,10 +39,11 @@ Para ejecutar los notebooks o scripts es necesario tener instalado:
 
 - Python 3.9 o superior
 - Las siguientes librerías:
-bash
+  
+´´´bash
 pip install pandas numpy scikit-learn imbalanced-learn xgboost matplotlib seaborn
 
-EJECUCIÓN:
+## EJECUCIÓN:
 
 1. Clonar el repositorio
 git clone https://github.com/mferlobato/TFI.git
@@ -51,7 +52,7 @@ cd TFI
 3. Ejecutar los scripts de la carpeta /scripts para reproducir los resultados.
 4. Los outputs (métricas y gráficos) se almacenan en la carpeta /outputs.
 
-Dataset
+## Dataset
 El dataset cs-training.csv proviene de la competencia Give Me Some Credit de Kaggle. Se provee para fines académicos exclusivamente.
 
 Variable objetivo: SeriousDlqin2yrs (1 si el cliente estuvo en mora severa en los próximos 2 años, 0 en caso contrario).

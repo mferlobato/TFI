@@ -1,4 +1,4 @@
-# TFI
+
 # TFI - Predicción de Morosidad Crediticia
 
 Este repositorio contiene el código fuente, datasets y recursos complementarios para el Trabajo Final Integrador (TFI) de la Especialización en Ciencia de Datos realizado por María Fernanda Lobato.  

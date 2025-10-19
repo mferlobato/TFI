@@ -38,7 +38,7 @@ plt.title('Distribución de la Edad')
 plt.show()
 #boxplot
 plt.figure(figsize=(10, 5))
-sns.boxplot(x=df["age"], color="pink")
+sns.boxplot(x=df_clean["age"], color="pink")
 plt.title("Boxplot de age", fontsize=14, fontweight="bold")
 plt.xlabel("age", fontsize=12)
 plt.grid(axis='x', linestyle='--', alpha=0.7)

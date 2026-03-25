@@ -5,15 +5,18 @@ import seaborn as sns
 # Cargar datos
 #df_clean = pd.read_csv("/Users/mariafernandalobato/Documents/Fernanda/ITBA/TFI/data/raw/cs-training.csv")
 
-df_clean = pd.read_csv("C:/Users/malobato/Desktop/Fer/tfi/cs-training-limpio-v2.csv")
+#df_clean = pd.read_csv("C:/Users/malobato/Desktop/Fer/tfi/cs-training-limpio-v2.csv")
+df_clean = pd.read_csv(r'C:\Users\malobato\Desktop\Fer\Cursor\TFI\cs-training-limpio-v2.csv')
 
-# Imputación si no se hizo antes
-df_clean['MonthlyIncome'].fillna(df_clean['MonthlyIncome'].median(), inplace=True)
-df_clean['NumberOfDependents'].fillna(0, inplace=True)
+# Imputación solo si las columnas existen (el CSV limpio ya tiene MonthlyIncome_log, no MonthlyIncome)
+if 'MonthlyIncome' in df_clean.columns:
+    df_clean['MonthlyIncome'].fillna(df_clean['MonthlyIncome'].median(), inplace=True)
+if 'NumberOfDependents' in df_clean.columns:
+    df_clean['NumberOfDependents'].fillna(0, inplace=True)
 
 # Estadísticas descriptivas generales
 print(df_clean.describe())
-print(df.shape)
+print(df_clean.shape)
 
 ##VARIABLE OBJETIVO: SeriousDlqin2yrs
 # Distribución variable objetivo
@@ -68,17 +71,14 @@ plt.show()
 
 ## Variable Días de mora
 #Histogramas de distribución
-delinquency_cols = [
-    'NumberOfTimes90DaysLate',
-    'NumberOfTime30-59DaysPastDueNotWorse',
-    'NumberOfTime60-89DaysPastDueNotWorse'
-]
+# Con el CSV limpio (TotalLate y TotalCreditLines reemplazan las 5 columnas viejas)
+delinquency_cols = ['TotalLate', 'TotalCreditLines']
 
 plt.figure(figsize=(15, 5))
-colors = ['#87CEEB', '#FF9999', '#99FF99'] 
+colors = ['#87CEEB', '#99FF99']
 
 for i, col in enumerate(delinquency_cols):
-    plt.subplot(1, 3, i + 1)
+    plt.subplot(1, 2, i + 1)
     sns.countplot(x=df_clean[col], color=colors[i])
     
 
@@ -94,15 +94,11 @@ plt.suptitle('Figura 6. Distribución de Frecuencia de Atrasos (Post-limpieza)',
 plt.show() 
 
 # Boxplots
-delinquency_cols = [
-    'NumberOfTimes90DaysLate',
-    'NumberOfTime30-59DaysPastDueNotWorse',
-    'NumberOfTime60-89DaysPastDueNotWorse'
-]
+delinquency_cols = ['TotalLate', 'TotalCreditLines']
 plt.figure(figsize=(15, 5))
-colors = ['#87CEEB', '#FF9999', '#99FF99'] 
+colors = ['#87CEEB', '#99FF99']
 for i, col in enumerate(delinquency_cols):
-    plt.subplot(1, 3, i + 1)
+    plt.subplot(1, 2, i + 1)
     sns.boxplot(x=df_clean[col], color=colors[i])
     
     plt.title(f'Boxplot de {col}', fontsize=12)
@@ -115,14 +111,14 @@ plt.show()
 
 ## Variable número de dependientes
 plt.figure(figsize=(10, 5))
-sns.boxplot(x=df["NumberOfDependents"], color="pink")
+sns.boxplot(x=df_clean["NumberOfDependents"], color="pink")
 plt.title("Boxplot de NumberOfDependents", fontsize=14, fontweight="bold")
 plt.xlabel("NumberOfDependents", fontsize=12)
 plt.grid(axis='x', linestyle='--', alpha=0.7)
 plt.show()
 
 plt.figure(figsize=(10, 5))
-sns.countplot(x=df_clean['NumberOfDependents'], color='pink')
+sns.boxplot(x=df_clean["NumberOfDependents"], color="pink")
 plt.title('Distribución de Número de Dependientes (Post-limpieza)', fontsize=14)
 plt.xlabel('Número de Dependientes', fontsize=12)
 plt.ylabel('Frecuencia', fontsize=12)
@@ -147,7 +143,7 @@ plt.show()
 
 
 ##VARIALBE lineas de créditos abiertas
-variable = 'NumberOfOpenCreditLinesAndLoans'
+variable = 'TotalCreditLines'
 
 # Plot 1: Histograma/Countplot
 plt.figure(figsize=(10, 5))
@@ -190,7 +186,7 @@ plt.xlim(-0.1, 2.0)
 plt.show()
 
 ##Variable NumberRealEstateLoansOrLines
-variable = 'NumberRealEstateLoansOrLines'
+variable = 'TotalCreditLines'
 # Plot 1: Histograma/Countplot
 plt.figure(figsize=(10, 5))
 sns.countplot(x=df_clean[variable], color='pink')
@@ -225,7 +221,7 @@ sns.heatmap(
     linecolor='black',
     cbar_kws={'label': 'Coeficiente de Correlación'}
 )
-plt.title('Matriz de Correlación de Variables (Tonos Rosados)', fontsize=16)
+plt.title('Matriz de Correlación de Variables', fontsize=16)
 plt.xticks(rotation=45, ha='right')
 plt.yticks(rotation=0)
 plt.tight_layout()
@@ -233,11 +229,12 @@ plt.show()
 
 ## boxplot comparativo del ingreso mensual vs morisidad
 plt.figure(figsize=(10, 6))
-sns.boxplot(x='SeriousDlqin2yrs', y='MonthlyIncome_log', data=df_clean, palette='pastel')
-plt.title('Figura 13. Boxplot Comparativo: Ingreso Mensual (Log) vs. Morosidad', fontsize=14)
+sns.boxplot(x='SeriousDlqin2yrs', y='MonthlyIncome_log', data=df_clean, hue='SeriousDlqin2yrs', palette='pastel', legend=False)
+plt.title('Boxplot Comparativo: Ingreso Mensual (Log) vs. Morosidad', fontsize=14)
 plt.xlabel('Morosidad (0: No Moroso, 1: Moroso)', fontsize=12)
 plt.ylabel('Ingreso Mensual Transformado (Log(V+1))', fontsize=12)
 plt.xticks([0, 1], ['0 - No Moroso', '1 - Moroso'])
 plt.grid(axis='y', linestyle='--', alpha=0.7)
 plt.show() 
+
 

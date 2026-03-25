@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
 
 # 1. Cargar el dataset LIMPIO y PREPROCESADO
-df = pd.read_csv("C:/Users/malobato/Desktop/Fer/tfi/cs-training-limpio-v2.csv")
+df = pd.read_csv(r'C:\Users\malobato\Desktop\Fer\Cursor\TFI\cs-training-limpio-v2.csv')
 
 # Revisar si hay una columna de índice no nombrada
 if df.columns[0].startswith('Unnamed'):

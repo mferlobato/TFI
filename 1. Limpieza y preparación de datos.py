@@ -3,7 +3,8 @@
 #Carga del Dataset.
 import pandas as pd
 #df = pd.read_csv("/Users/mariafernandalobato/Documents/Fernanda/ITBA/TFI/data/raw/cs-training.csv")
-df = pd.read_csv('C:/Users/malobato/Desktop/Fer/tfi/cs-training.csv')
+#df = pd.read_csv('C:/Users/malobato/Desktop/Fer/tfi/cs-training.csv')
+df = pd.read_csv(r'C:\Users\malobato\Desktop\Fer\Cursor\TFI\cs-training.csv')
 print(df.shape)
 df.head()
 
@@ -68,6 +69,17 @@ df = df[df['NumberOfOpenCreditLinesAndLoans'] <= 30]
 # Se aplica un límite superior de 20 para eliminar los casos inusuales cercanos a 50.
 df = df[df['NumberRealEstateLoansOrLines'] <= 20]
 
+df['TotalLate'] = (df['NumberOfTimes90DaysLate'] +
+                   df['NumberOfTime60-89DaysPastDueNotWorse'] +
+                   df['NumberOfTime30-59DaysPastDueNotWorse'])
+
+df['TotalCreditLines'] = df['NumberOfOpenCreditLinesAndLoans'] + df['NumberRealEstateLoansOrLines']
+
+df = df.drop(columns=[
+    'NumberOfTimes90DaysLate', 'NumberOfTime60-89DaysPastDueNotWorse', 'NumberOfTime30-59DaysPastDueNotWorse',
+    'NumberOfOpenCreditLinesAndLoans', 'NumberRealEstateLoansOrLines'
+])
+
 # 3. Transformación Logarítmica (MonthlyIncome)
 # ====================================================================
 
@@ -86,4 +98,6 @@ print(f"Registros eliminados: {150000 - df.shape[0]}") # Asumiendo 150k iniciale
 
 # Guardar el dataset limpio
 df.to_csv("C:/Users/malobato/Desktop/Fer/tfi/cs-training-limpio-v2.csv", index=False)
+
+
 

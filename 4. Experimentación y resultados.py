@@ -7,17 +7,19 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier # Si tienes problemas, comenta esta línea y el pipeline XGBoost.
+from lightgbm import LGBMClassifier
 from sklearn.metrics import (confusion_matrix, accuracy_score, precision_score, recall_score,
                             f1_score, roc_auc_score)
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline as ImbPipeline
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 
 
 ## Carga de dataset
 
-df = pd.read_csv("/Users/mariafernandalobato/Documents/Fernanda/ITBA/TFI/data/raw/cs-training.csv")
+df = pd.read_csv(r"C:\Users\malobato\Desktop\Fer\Cursor\TFI\cs-training-limpio-v2.csv")
 # El dataset limpio debe tener 11 columnas (10 predictoras + 1 objetivo)
 print(f"Dataset Limpio cargado. Filas: {df.shape[0]}, Columnas: {df.shape[1]}")
 df['SeriousDlqin2yrs'] = df['SeriousDlqin2yrs'].astype(int)
@@ -63,6 +65,13 @@ xgb_pipe = ImbPipeline([
     ('clf', XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42))
 ])
 
+# LightGBM
+lgb_pipe = ImbPipeline([
+    ('imputer', SimpleImputer(strategy='median')),
+    ('smote', SMOTE(random_state=42)),
+    ('clf', LGBMClassifier(random_state=42, verbosity=-1))
+])
+
 # Grillas para GridSearch
 rf_grid = {'clf__max_features': [2, 3, 4, 5]}
 xgb_grid = {
@@ -74,21 +83,33 @@ xgb_grid = {
     'clf__gamma': [0],
     'clf__min_child_weight': [1]
 }
+lgb_grid = {
+    'clf__max_depth': [4, 6, 8],
+    'clf__n_estimators': [100, 150],
+    'clf__learning_rate': [0.01, 0.1],
+    'clf__num_leaves': [31, 50],
+    'clf__subsample': [0.8],
+    'clf__colsample_bytree': [0.8],
+    'clf__min_child_samples': [20, 30]
+}
 
-## Entrenamiento con Grid Search (ROC-AUC como score principal)
+## Entrenamiento con Grid Search (F1 como score principal, para capturar mejor a los morosos)
 print("Entrenando modelos... Esto puede tardar varios minutos.")
 
 # NOTA: log_clf no necesita una grilla de hiperparámetros complejos
-log_clf = GridSearchCV(log_pipe, {}, scoring='roc_auc', cv=cv, refit=True, verbose=0) 
-rf_clf = GridSearchCV(rf_pipe, rf_grid, scoring='roc_auc', cv=cv, refit=True, verbose=0)
-xgb_clf = GridSearchCV(xgb_pipe, xgb_grid, scoring='roc_auc', cv=cv, refit=True, verbose=0)
+log_clf = GridSearchCV(log_pipe, {}, scoring='f1', cv=cv, refit=True, verbose=0) 
+rf_clf = GridSearchCV(rf_pipe, rf_grid, scoring='f1', cv=cv, refit=True, verbose=0)
+xgb_clf = GridSearchCV(xgb_pipe, xgb_grid, scoring='f1', cv=cv, refit=True, verbose=0)
+lgb_clf = GridSearchCV(lgb_pipe, lgb_grid, scoring='f1', cv=cv, refit=True, verbose=0)
 
 log_clf.fit(X_train, y_train)
 rf_clf.fit(X_train, y_train)
 xgb_clf.fit(X_train, y_train)
+lgb_clf.fit(X_train, y_train)
 
 print("Mejores RF parámetros:", rf_clf.best_params_)
 print("Mejores XGB parámetos:", xgb_clf.best_params_)
+print("Mejores LightGBM parámetros:", lgb_clf.best_params_)
 
 # =================================================================
 ## Evaluación en TEST
@@ -96,7 +117,8 @@ print("Mejores XGB parámetos:", xgb_clf.best_params_)
 modelos = {
     "Regresión Logística": log_clf.best_estimator_,
     "Random Forest": rf_clf.best_estimator_,
-    "XGBoost": xgb_clf.best_estimator_
+    "XGBoost": xgb_clf.best_estimator_,
+    "LightGBM": lgb_clf.best_estimator_
 }
 
 resultados = []
@@ -135,6 +157,8 @@ print("Mejores RF parámetros:", rf_clf.best_params_)
 
 # Muestra los mejores parámetros para XGBoost
 print("Mejores XGB parámetros:", xgb_clf.best_params_)
+# Muestra los mejores parámetros para LightGBM
+print("Mejores LightGBM parámetros:", lgb_clf.best_params_)
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -192,9 +216,10 @@ from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.model_selection import train_test_split
 
 modelos = {
-    "Regresión Logística (AUC: 0.8202)": log_clf.best_estimator_,
-    "Random Forest (AUC: 0.8294)": rf_clf.best_estimator_,
-    "XGBoost (AUC: 0.8447)": xgb_clf.best_estimator_ 
+    "Regresión Logística": log_clf.best_estimator_,
+    "Random Forest": rf_clf.best_estimator_,
+    "XGBoost": xgb_clf.best_estimator_,
+    "LightGBM": lgb_clf.best_estimator_
 }
 
 plt.figure(figsize=(10, 8))
@@ -216,9 +241,14 @@ for nombre, modelo in modelos.items():
 
 plt.xlabel('Tasa de Falsos Positivos (FPR)')
 plt.ylabel('Tasa de Verdaderos Positivos (TPR) / Recall')
-plt.title('Figura 21. Curva ROC Comparativa de Modelos', fontsize=16)
+plt.title('Curva ROC comparativa de modelos', fontsize=16)
 plt.legend(loc="lower right", fontsize=10)
 plt.grid(True, linestyle='--', alpha=0.6)
+_roc_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'figures_matrices')
+os.makedirs(_roc_dir, exist_ok=True)
+_roc_path = os.path.join(_roc_dir, 'curva_roc_comparativa.png')
+plt.savefig(_roc_path, dpi=300, bbox_inches='tight')
+print('Curva ROC guardada en:', _roc_path)
 plt.show()
 
-print("Se generó la Figura 21 (Curva ROC) para los modelos.")
+print("Curva ROC generada (numerá la figura en Word, p. ej. Figura 22).")
